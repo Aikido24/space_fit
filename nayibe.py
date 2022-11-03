@@ -5,6 +5,9 @@ pg.init()
 size=(800,600)
 screen=pg.display.set_mode(size)
 clock=pg.time.Clock()
+#fondo
+fondo=pg.image.load("./imagenes/fondo.png").convert()
+posicion_fondo=(0,0)
 #variables player
 nave_player=pg.image.load("./imagenes/nave_player.png").convert_alpha()
 rectangulo_player=nave_player.get_rect(midbottom=(80,600))
@@ -63,6 +66,9 @@ def events():
 def drawling():
     global nave_player
     global rectangulo_player
+    global fondo
+    global posicion_fondo
+    screen.blit(fondo,posicion_fondo)
     screen.blit(nave_player,rectangulo_player)
 #bucle principal
 while True:
