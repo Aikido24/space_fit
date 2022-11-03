@@ -5,6 +5,9 @@ pg.init()
 size=(800,600)
 screen=pg.display.set_mode(size)
 clock=pg.time.Clock()
+#musica
+cancion1=pg.mixer.Sound("./musica/Out-Of-My-System.mp3")
+
 #fondo
 fondo=pg.image.load("./imagenes/fondo.png").convert()
 posicion_fondo=(0,0)
@@ -18,7 +21,6 @@ def move_player():
     global rectangulo_player
     global speed_playerx
     global speed_playery
-    print (rectangulo_player.bottom)
     if rectangulo_player.left>690:
         speed_playerx=0
         rectangulo_player.left=690
@@ -70,6 +72,7 @@ def drawling():
     global posicion_fondo
     screen.blit(fondo,posicion_fondo)
     screen.blit(nave_player,rectangulo_player)
+cancion1.play()
 #bucle principal
 while True:
     events()
