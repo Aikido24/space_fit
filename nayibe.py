@@ -9,21 +9,32 @@ clock=pg.time.Clock()
 nave_player=pg.image.load("./imagenes/nave_player.png").convert_alpha()
 rectangulo_player=nave_player.get_rect(midbottom=(80,600))
 speed_playerx=0
+speed_playery=0
 #movimiento player
 def move_player():
     global rectangulo_player
     global speed_playerx
-    print (rectangulo_player.right)
+    global speed_playery
+    print (rectangulo_player.bottom)
     if rectangulo_player.left>690:
         speed_playerx=0
         rectangulo_player.left=690
     if rectangulo_player.right<120:
         speed_playerx=0
         rectangulo_player.right=120
+    
+    if rectangulo_player.top<0:
+        speed_playery=0
+        rectangulo_player.top=0
+    if rectangulo_player.bottom>600:
+        speed_playery=0
+        rectangulo_player.bottom=600
     rectangulo_player.x+=speed_playerx
+    rectangulo_player.y+=speed_playery
 #funcion de eventos
 def events():
     global speed_playerx
+    global speed_playery
     for event in pg.event.get():
         if event.type==pg.QUIT:
             pg.quit()
@@ -34,11 +45,19 @@ def events():
                 speed_playerx=-3
             if event.key==pg.K_RIGHT:
                 speed_playerx=3
+            if event.key==pg.K_UP:
+                speed_playery=-3
+            if event.key==pg.K_DOWN:
+                speed_playery=3
         if event.type==pg.KEYUP:
             if event.key==pg.K_LEFT:
                 speed_playerx=0
             if event.key==pg.K_RIGHT:
                 speed_playerx=0
+            if event.key==pg.K_UP:
+                speed_playery=0
+            if event.key==pg.K_DOWN:
+                speed_playery=0
             
 #funcion de dibujo
 def drawling():
