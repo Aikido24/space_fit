@@ -16,7 +16,7 @@ enemigo1_posicion=imagen_enemigo1.get_rect(midbottom=(80,0))
 direcion_enemigo=6
 decenso_enemigo=0
 nave_destrucion=True
-
+enemigo_posicion_top = enemigo1_posicion.top
 #fondo
 fondo=pg.image.load("./imagenes/FONDO/fondo1.png").convert()
 posicion_fondo=(0,0)
@@ -150,12 +150,15 @@ def movimiento_enemigo1():
     global imagen_enemigo1
     global direcion_enemigo
     global decenso_enemigo
+    global enemigo_posicion_top
     if enemigo1_posicion.left>750:
         direcion_enemigo=-6
-        enemigo1_posicion.top+=20
+        enemigo_posicion_top+=20
     if enemigo1_posicion.right<50:
         direcion_enemigo=6
-        enemigo1_posicion.top+=20
+        enemigo_posicion_top+=20
+    if enemigo1_posicion.top != enemigo_posicion_top:
+        enemigo1_posicion.top+=2
     #decenso_enemigo+=0.007
     #enemigo1_posicion.top+= int(decenso_enemigo)
     enemigo1_posicion.left+=direcion_enemigo
