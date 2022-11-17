@@ -1,5 +1,6 @@
 import pygame as pg
 from sys import exit
+import random
 
 #zona de variables
 pg.init()
@@ -8,15 +9,15 @@ screen=pg.display.set_mode(size)
 clock=pg.time.Clock()
 
 #musica
-cancion1=pg.mixer.Sound("./musica/Out-Of-My-System.mp3")
+
 
 #variables enemigos
 imagen_enemigo1=pg.image.load("./imagenes/marciano 2.png").convert_alpha()
-enemigo1_posicion=imagen_enemigo1.get_rect(midbottom=(80,0))
-direcion_enemigo=6
-decenso_enemigo=0
-nave_destrucion=True
-enemigo_posicion_top = enemigo1_posicion.top
+enemigo1_posicion=[]
+nave_destrucion=[]
+direcion_enemigo=[]
+decenso_enemigo=[]
+enemigo_posicion_top = []
 #fondo
 fondo=pg.image.load("./imagenes/FONDO/fondo1.png").convert()
 posicion_fondo=(0,0)
@@ -89,6 +90,11 @@ def move_player():
     
 
 #funcion de eventos
+generador_enemigos=pg.USEREVENT+1
+pg.time.set_timer(generador_enemigos,2000)
+disparos_tiempo=pg.USEREVENT+2
+pg.time.set_timer(disparos_tiempo,500)
+boton_disparo=False
 
 def events():
     global speed_playerx
@@ -96,7 +102,11 @@ def events():
     global imagen_bala
     global disparos
     global rectangulo_player 
+    global enemigo1_posicion,imagen_enemigo1
+    global nave_destrucion
+    global direcion_enemigo,decenso_enemigo,enemigo_posicion_top 
     global LEFT , RIGHT , UP , DOWN
+    global boton_disparo
 
     for event in pg.event.get():
         if event.type==pg.QUIT:
@@ -117,7 +127,8 @@ def events():
                 
                 DOWN=True
             if event.key==pg.K_SPACE:
-                disparos.append(imagen_bala.get_rect(midbottom=rectangulo_player.midtop))
+                boton_disparo=True
+
         if event.type==pg.KEYUP:
             
             if event.key==pg.K_LEFT:
@@ -132,6 +143,19 @@ def events():
             if event.key==pg.K_DOWN:
                 
                 DOWN=False
+            if event.key==pg.K_SPACE:
+                boton_disparo=False
+
+        #creacion enemigos
+        if event.type==generador_enemigos:
+            direcion_enemigo.append(6)
+            decenso_enemigo.append(0)
+            enemigo_posicion_top.append(0)
+            nave_destrucion.append(True)
+            enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(80,0)))
+        if event.type==disparos_tiempo:
+            if boton_disparo:
+                disparos.append(imagen_bala.get_rect(midbottom=rectangulo_player.midtop))
 
 #movimiento fondo
 def movimiento_fondo():
@@ -151,18 +175,20 @@ def movimiento_enemigo1():
     global direcion_enemigo
     global decenso_enemigo
     global enemigo_posicion_top
-    if enemigo1_posicion.left>750:
-        direcion_enemigo=-6
-        enemigo_posicion_top+=20
-    if enemigo1_posicion.right<50:
-        direcion_enemigo=6
-        enemigo_posicion_top+=20
-    if enemigo1_posicion.top != enemigo_posicion_top:
-        enemigo1_posicion.top+=2
-    #decenso_enemigo+=0.007
-    #enemigo1_posicion.top+= int(decenso_enemigo)
-    enemigo1_posicion.left+=direcion_enemigo
-    #print(enemigo1_posicion.top)
+    for i in range (len(enemigo1_posicion)):
+
+        if enemigo1_posicion[i].left>750:
+            direcion_enemigo[i]=-6
+            enemigo_posicion_top[i]+=20
+        if enemigo1_posicion[i].right<50:
+            direcion_enemigo[i]=6
+            enemigo_posicion_top[i]+=20
+        if enemigo1_posicion[i].top != enemigo_posicion_top[i]:
+            enemigo1_posicion[i].top+=2
+        #decenso_enemigo+=0.007
+        #enemigo1_posicion.top+= int(decenso_enemigo)
+        enemigo1_posicion[i].left+=direcion_enemigo[i]
+        #print(enemigo1_posicion.top)
 
 #funcion de dibujo
 def disparos_draw():
@@ -171,12 +197,21 @@ def disparos_draw():
     global enemigo1_posicion
     global nave_destrucion
     if len(disparos)!=0:
+        eliminar=False
         for i in range(len(disparos)):
-            disparos[i].top-=5
-            if enemigo1_posicion.colliderect(disparos[i]):
-                nave_destrucion=False
+            disparos[i].top-=5 
             screen.blit(imagen_bala,disparos[i])
-            
+        for i in range(len(disparos)):   
+            for j in range(len(enemigo1_posicion)):
+                if enemigo1_posicion[j].colliderect(disparos[i]):
+                    nave_destrucion[j]=False
+                    disparos.pop(i) 
+                    eliminar=True
+                    break
+                
+            if eliminar:
+                eliminar=False
+                break 
         for i in range(len(disparos)):        
             if disparos[i].bottom<-20:
                 disparos.pop(i)
@@ -208,7 +243,29 @@ def drawling():
     nave_draw()
     disparos_draw()
 
-cancion1.play()
+def dibujar_enemigo():
+    global nave_destrucion,imagen_enemigo1,enemigo1_posicion
+    for i in range (len(enemigo1_posicion)):
+        if nave_destrucion[i]:
+            screen.blit(imagen_enemigo1,enemigo1_posicion[i])
+       
+#fondo
+            ################################
+#musica
+numero_cancion=0
+canciones=["Out-Of-My-System","Ghost-Mary-On-A-Cross-_Official-Audio_"]
+
+def play_music ():
+    global numero_cancion,canciones
+    if not (pg.mixer.music.get_busy()):
+        pg.mixer.music.load(f"./musica/{canciones[numero_cancion]}.mp3")
+        pg.mixer.music.play()
+        numero_cancion+=1
+        if numero_cancion >= len(canciones):
+            numero_cancion=0
+
+
+
 #bucle principal
 while True:
     events()
@@ -217,11 +274,18 @@ while True:
     #zona de dibujo
     movimiento_fondo()
     drawling()
-    if nave_destrucion:
-        screen.blit(imagen_enemigo1,enemigo1_posicion)
+    dibujar_enemigo()
     movimiento_enemigo1()
     pg.display.update()
     print(speed_playerx)
     clock.tick(60)
     events()
-    
+    for i in nave_destrucion:
+        if not i :
+            nave_destrucion.pop(i)
+            enemigo1_posicion.pop(i) 
+            direcion_enemigo.pop(i)
+            decenso_enemigo.pop(i)
+            enemigo_posicion_top.pop(i)
+            break
+    play_music()
