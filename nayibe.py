@@ -49,6 +49,7 @@ DOWN=False
 disparos=[]
 imagen_bala=pg.image.load("./imagenes/BALAS.png").convert_alpha()
 posicion_bala=imagen_bala.get_rect(midbottom=(100,100))
+laser = pg.mixer.Sound('./sounds/laser.wav')
 
 #movimiento player
 
@@ -152,10 +153,12 @@ def events():
             decenso_enemigo.append(0)
             enemigo_posicion_top.append(0)
             nave_destrucion.append(True)
-            enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(80,0)))
+            enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(0,750),0)))
+
         if event.type==disparos_tiempo:
             if boton_disparo:
                 disparos.append(imagen_bala.get_rect(midbottom=rectangulo_player.midtop))
+                laser.play()
 
 #movimiento fondo
 def movimiento_fondo():
@@ -177,18 +180,18 @@ def movimiento_enemigo1():
     global enemigo_posicion_top
     for i in range (len(enemigo1_posicion)):
 
-        if enemigo1_posicion[i].left>750:
-            direcion_enemigo[i]=-6
-            enemigo_posicion_top[i]+=20
-        if enemigo1_posicion[i].right<50:
-            direcion_enemigo[i]=6
-            enemigo_posicion_top[i]+=20
         if enemigo1_posicion[i].top != enemigo_posicion_top[i]:
-            enemigo1_posicion[i].top+=2
-        #decenso_enemigo+=0.007
-        #enemigo1_posicion.top+= int(decenso_enemigo)
-        enemigo1_posicion[i].left+=direcion_enemigo[i]
-        #print(enemigo1_posicion.top)
+            enemigo1_posicion[i].top+=1
+        else:
+            if enemigo1_posicion[i].left>750:
+                direcion_enemigo[i]=-6
+                enemigo_posicion_top[i]+=30
+            if enemigo1_posicion[i].right<50:
+                direcion_enemigo[i]=6
+                enemigo_posicion_top[i]+=30
+        
+            enemigo1_posicion[i].left+=direcion_enemigo[i]
+        
 
 #funcion de dibujo
 def disparos_draw():
@@ -205,6 +208,7 @@ def disparos_draw():
             for j in range(len(enemigo1_posicion)):
                 if enemigo1_posicion[j].colliderect(disparos[i]):
                     nave_destrucion[j]=False
+                    del_enemigo(j)
                     disparos.pop(i) 
                     eliminar=True
                     break
@@ -266,6 +270,14 @@ def play_music ():
 
 
 
+def del_enemigo(i):
+    global nave_destrucion,enemigo1_posicion,direcion_enemigo,decenso_enemigo,enemigo_posicion_top
+    enemigo1_posicion.pop(i) 
+    direcion_enemigo.pop(i)
+    decenso_enemigo.pop(i)
+    enemigo_posicion_top.pop(i)
+    nave_destrucion.pop(i)
+   
 #bucle principal
 while True:
     events()
@@ -277,15 +289,14 @@ while True:
     dibujar_enemigo()
     movimiento_enemigo1()
     pg.display.update()
-    print(speed_playerx)
+    
     clock.tick(60)
+    print(len(enemigo1_posicion)) 
+    print(len(direcion_enemigo))
+    print(len(decenso_enemigo))
+    print(len(enemigo_posicion_top))
+    print(len(nave_destrucion))
+    print(nave_destrucion)
     events()
-    for i in nave_destrucion:
-        if not i :
-            nave_destrucion.pop(i)
-            enemigo1_posicion.pop(i) 
-            direcion_enemigo.pop(i)
-            decenso_enemigo.pop(i)
-            enemigo_posicion_top.pop(i)
-            break
+    #del_enemigo()
     play_music()
