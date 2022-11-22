@@ -75,9 +75,9 @@ sonido_vaca = pg.mixer.Sound('./sounds/vaca.wav')
 
 #Explosión vacas
 explosion_vaca = [] 
-explosion_vaca.append(pg.image.load("./imagenes/vaca_ex1.png").convert_alpha())
-explosion_vaca.append(pg.image.load("./imagenes/vaca_ex2.png").convert_alpha())
-explosion_vaca.append(pg.image.load("./imagenes/vaca_ex3.png").convert_alpha())
+explosion_vaca.append(pg.image.load("./imagenes/vaca_ex01.png").convert_alpha())
+explosion_vaca.append(pg.image.load("./imagenes/vaca_ex02.png").convert_alpha())
+explosion_vaca.append(pg.image.load("./imagenes/vaca_ex03.png").convert_alpha())
 rectangulo_explosion_vaca = []
 animacion_explosion_vaca = []
 
