@@ -18,6 +18,16 @@ nave_destrucion=[]
 direcion_enemigo=[]
 decenso_enemigo=[]
 enemigo_posicion_top = []
+
+#Explosión enemigo
+explosion_enemigo = [] 
+explosion_enemigo.append(pg.image.load("./imagenes/marciano_ex1.png").convert_alpha())
+explosion_enemigo.append(pg.image.load("./imagenes/marciano_ex2.png").convert_alpha())
+explosion_enemigo.append(pg.image.load("./imagenes/marciano_ex3.png").convert_alpha())
+rectangulo_explosion_enemigo = []
+animacion_explosion_enemigo = []
+explosion_song = pg.mixer.Sound('./sounds/explosion.wav')
+
 #fondo
 fondo=pg.image.load("./imagenes/FONDO/fondo1.png").convert()
 posicion_fondo=(0,0)
@@ -34,6 +44,9 @@ nave_player.append(pg.image.load("./imagenes/NAVE/NAVE_1.png").convert_alpha())
 nave_player.append(pg.image.load("./imagenes/NAVE/NAVE_2.png").convert_alpha())
 nave_player.append(pg.image.load("./imagenes/NAVE/NAVE_3.png").convert_alpha())
 nave_player.append(pg.image.load("./imagenes/NAVE/NAVE_4.png").convert_alpha())
+vidas = pg.image.load("./imagenes/vida.png").convert_alpha()
+vida = 3
+nave_explosion = False
 rectangulo_player=nave_player[1].get_rect(midbottom=(80,600))
 animacion_nave=0
 speed_playerx=0
@@ -44,6 +57,8 @@ RIGHT=False
 UP=False
 DOWN=False
 
+
+
 #disparos player
 
 disparos=[]
@@ -51,7 +66,20 @@ imagen_bala=pg.image.load("./imagenes/BALAS.png").convert_alpha()
 posicion_bala=imagen_bala.get_rect(midbottom=(100,100))
 laser = pg.mixer.Sound('./sounds/laser.wav')
 
+
 #movimiento player
+vacas = []
+vaca_time = []
+imagen_vaca = pg.image.load('./imagenes/vaca.png').convert_alpha()
+sonido_vaca = pg.mixer.Sound('./sounds/vaca.wav')
+
+#Explosión vacas
+explosion_vaca = [] 
+explosion_vaca.append(pg.image.load("./imagenes/vaca_ex1.png").convert_alpha())
+explosion_vaca.append(pg.image.load("./imagenes/vaca_ex2.png").convert_alpha())
+explosion_vaca.append(pg.image.load("./imagenes/vaca_ex3.png").convert_alpha())
+rectangulo_explosion_vaca = []
+animacion_explosion_vaca = []
 
 def move_player():
     global rectangulo_player
@@ -92,9 +120,13 @@ def move_player():
 
 #funcion de eventos
 generador_enemigos=pg.USEREVENT+1
-pg.time.set_timer(generador_enemigos,2000)
+pg.time.set_timer(generador_enemigos,5000)
 disparos_tiempo=pg.USEREVENT+2
 pg.time.set_timer(disparos_tiempo,500)
+
+disparos_vacas=pg.USEREVENT+3
+pg.time.set_timer(disparos_vacas,500)
+
 boton_disparo=False
 
 def events():
@@ -107,8 +139,8 @@ def events():
     global nave_destrucion
     global direcion_enemigo,decenso_enemigo,enemigo_posicion_top 
     global LEFT , RIGHT , UP , DOWN
-    global boton_disparo
-
+    global boton_disparo, vaca_time, vacas
+    
     for event in pg.event.get():
         if event.type==pg.QUIT:
             pg.quit()
@@ -154,11 +186,18 @@ def events():
             enemigo_posicion_top.append(0)
             nave_destrucion.append(True)
             enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(0,750),0)))
+            vaca_time.append(random.randint(2,3))
 
         if event.type==disparos_tiempo:
-            if boton_disparo:
+            if boton_disparo and not (nave_explosion):
                 disparos.append(imagen_bala.get_rect(midbottom=rectangulo_player.midtop))
                 laser.play()
+        
+        if event.type==disparos_vacas:
+            if len(vaca_time) != 0:
+                for i in range(len(vaca_time)):
+                    if int(pg.time.get_ticks()/1000) % vaca_time[i] == 0:
+                        vacas.append(imagen_vaca.get_rect(midtop=enemigo1_posicion[i].midbottom))  
 
 #movimiento fondo
 def movimiento_fondo():
@@ -199,8 +238,11 @@ def disparos_draw():
     global imagen_bala
     global enemigo1_posicion
     global nave_destrucion
+    global vacas, sonido_vaca, rectangulo_explosion_vaca, animacion_explosion_vaca
+    
     if len(disparos)!=0:
         eliminar=False
+        eliminar1=False
         for i in range(len(disparos)):
             disparos[i].top-=5 
             screen.blit(imagen_bala,disparos[i])
@@ -212,24 +254,78 @@ def disparos_draw():
                     disparos.pop(i) 
                     eliminar=True
                     break
-                
+        
             if eliminar:
                 eliminar=False
+                break 
+        for i in range(len(disparos)): 
+            for h in range(len(vacas)):
+                if vacas[h].colliderect(disparos[i]):
+                    disparos.pop(i)
+                    rectangulo_explosion_vaca.append(vacas[h])
+                    animacion_explosion_vaca.append(0)
+                    vacas.pop(h)
+                    sonido_vaca.play()
+                    eliminar1=True
+                    break
+            if eliminar1:
+                eliminar1=False
                 break 
         for i in range(len(disparos)):        
             if disparos[i].bottom<-20:
                 disparos.pop(i)
                 break
 
+
+def colision_nave():
+    global enemigo1_posicion
+    global rectangulo_player
+    global vida, nave_explosion
+    
+    for i in enemigo1_posicion:
+        if rectangulo_player.colliderect(i):
+            if not nave_explosion:
+                vida-=1
+                nave_explosion = True
+
 def nave_draw():
     global nave_player
     global rectangulo_player
-    global animacion_nave    
-    screen.blit(nave_player[int(animacion_nave)],rectangulo_player)
-    animacion_nave+=0.2
-    if animacion_nave>= len(nave_player):
-        animacion_nave = 0
+    global animacion_nave  
+    global nave_explosion
+    if nave_explosion:
+        pass
+    ##############################################################
+    else:  
+        screen.blit(nave_player[int(animacion_nave)],rectangulo_player)
+        animacion_nave+=0.2
+        if animacion_nave>= len(nave_player):
+            animacion_nave = 0
 
+
+def explosion_enemigo_draw():
+    global explosion_enemigo
+    global rectangulo_explosion_enemigo
+    global animacion_explosion_enemigo   
+    for i in range(len(animacion_explosion_enemigo)) :
+        screen.blit(explosion_enemigo[int(animacion_explosion_enemigo[i])],rectangulo_explosion_enemigo[i])
+        animacion_explosion_enemigo[i] +=0.2
+        if animacion_explosion_enemigo[i] >= len(explosion_enemigo):
+            animacion_explosion_enemigo.pop(i)
+            rectangulo_explosion_enemigo.pop(i)
+            break
+
+def explosion_vaca_draw():
+    global rectangulo_explosion_vaca, animacion_explosion_vaca, explosion_vaca
+
+    for i in range(len(animacion_explosion_vaca)) :
+        screen.blit(explosion_vaca[int(animacion_explosion_vaca[i])],rectangulo_explosion_vaca[i])
+        animacion_explosion_vaca[i] +=0.2
+        if animacion_explosion_vaca[i] >= len(explosion_enemigo):
+            animacion_explosion_vaca.pop(i)
+            rectangulo_explosion_vaca.pop(i)
+            break
+ 
 def drawling():
     global fondo
     global posicion_fondo
@@ -252,9 +348,15 @@ def dibujar_enemigo():
     for i in range (len(enemigo1_posicion)):
         if nave_destrucion[i]:
             screen.blit(imagen_enemigo1,enemigo1_posicion[i])
+
+def dibujar_vacas():
+    global vacas, imagen_vaca
+
+    for j in range(len(vacas)):
+        screen.blit(imagen_vaca,vacas[j])
+        vacas[j].top+=2
        
-#fondo
-            ################################
+
 #musica
 numero_cancion=0
 canciones=["Out-Of-My-System","Ghost-Mary-On-A-Cross-_Official-Audio_"]
@@ -268,15 +370,26 @@ def play_music ():
         if numero_cancion >= len(canciones):
             numero_cancion=0
 
-
+def vida_draw():
+    global vida
+    lista = (700,725,750)
+    for i in range(vida):
+        screen.blit(vidas,(lista[i],10))
 
 def del_enemigo(i):
     global nave_destrucion,enemigo1_posicion,direcion_enemigo,decenso_enemigo,enemigo_posicion_top
+    global vaca_time, explosion_song
+    global rectangulo_explosion_enemigo
+    global animacion_explosion_enemigo  
+    rectangulo_explosion_enemigo.append(enemigo1_posicion[i])
+    animacion_explosion_enemigo.append(0)
+    explosion_song.play()
     enemigo1_posicion.pop(i) 
     direcion_enemigo.pop(i)
     decenso_enemigo.pop(i)
     enemigo_posicion_top.pop(i)
     nave_destrucion.pop(i)
+    vaca_time.pop(i)
    
 #bucle principal
 while True:
@@ -288,15 +401,25 @@ while True:
     drawling()
     dibujar_enemigo()
     movimiento_enemigo1()
+    dibujar_vacas()
+    explosion_enemigo_draw()
+    explosion_vaca_draw()
+    vida_draw()
+    colision_nave()
+   
     pg.display.update()
     
     clock.tick(60)
-    print(len(enemigo1_posicion)) 
-    print(len(direcion_enemigo))
-    print(len(decenso_enemigo))
-    print(len(enemigo_posicion_top))
-    print(len(nave_destrucion))
-    print(nave_destrucion)
+
     events()
-    #del_enemigo()
+  
     play_music()
+    
+    
+
+    for j in range(len(vacas)):
+        if vacas[j].top > 630:
+            vacas.pop(j)
+            break
+
+    
