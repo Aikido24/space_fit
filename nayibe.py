@@ -41,6 +41,9 @@ modo_facil=pg.image.load("./imagenes/DIFICULTAD/FACIL/02 FACIL.png").convert_alp
 modo_experto=pg.image.load("./imagenes/DIFICULTAD/EXPERTO/02 EXPERTO.png").convert_alpha()
 modo_dificil=pg.image.load("./imagenes/DIFICULTAD/DIFICIL/02 DIFICIL.png").convert_alpha()
 numero_menu=0
+tarro = pg.image.load("./imagenes/TARRO.png").convert_alpha()
+linea_leche= pg.image.load("./imagenes/LINEA LECHE.png").convert_alpha()
+
 #fondo particulas
 fondo_particulas=pg.image.load("./imagenes/particulas.png").convert_alpha()
 posicion_particulas=fondo_particulas.get_rect(midtop=(410,0))
@@ -60,7 +63,7 @@ nave_player.append(pg.image.load("./imagenes/NAVE/NAVE_4.png").convert_alpha())
 vidas = pg.image.load("./imagenes/vida.png").convert_alpha()
 vida = 3
 nave_explosion = False
-rectangulo_player=nave_player[1].get_rect(midbottom=(80,600))
+rectangulo_player=nave_player[1].get_rect(midbottom=(400,600))
 animacion_nave=0
 speed_playerx=0
 speed_playery=0
@@ -122,9 +125,9 @@ def move_player():
     if rectangulo_player.left>=690:
         #speed_playerx=0
         rectangulo_player.left=688
-    if rectangulo_player.right<=120:
+    if rectangulo_player.right<=200:
         #speed_playerx=0
-        rectangulo_player.right=122
+        rectangulo_player.right=200
     if rectangulo_player.top<=0:
         #speed_playery=0
         rectangulo_player.top=2
@@ -148,6 +151,7 @@ boton_disparo=False
 def eventos_menu():
     global numero_menu,play_game,vida
     global LEFT , RIGHT , UP , DOWN
+    global score_naves, score_vacas, nave_explosion
     
     for event in pg.event.get():
         if event.type==pg.QUIT:
@@ -175,6 +179,9 @@ def eventos_menu():
                 RIGHT=False
                 UP=False
                 DOWN=False
+                score_naves=0
+                score_vacas=0
+                nave_explosion= False
                    
 
 def events():
@@ -233,21 +240,21 @@ def events():
             decenso_enemigo.append(0)
             enemigo_posicion_top.append(0)
             nave_destrucion.append(True)
-            enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(0,750),0)))
+            enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(200,750),0)))
             vaca_time.append(random.randint(2,3))
             if numero_menu>0:
                 direcion_enemigo.append(6)
                 decenso_enemigo.append(0)
                 enemigo_posicion_top.append(0)
                 nave_destrucion.append(True)
-                enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(0,750),0)))
+                enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(200,750),0)))
                 vaca_time.append(random.randint(2,3))
             if numero_menu>1:
                 direcion_enemigo.append(6)
                 decenso_enemigo.append(0)
                 enemigo_posicion_top.append(0)
                 nave_destrucion.append(True)
-                enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(0,750),0)))
+                enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(200,750),0)))
                 vaca_time.append(random.randint(2,3))
 
         if event.type==disparos_tiempo:
@@ -287,7 +294,7 @@ def movimiento_enemigo1():
             if enemigo1_posicion[i].left>750:
                 direcion_enemigo[i]=-6
                 enemigo_posicion_top[i]+=30
-            if enemigo1_posicion[i].right<50:
+            if enemigo1_posicion[i].right<200:
                 direcion_enemigo[i]=6
                 enemigo_posicion_top[i]+=30
         
@@ -301,7 +308,7 @@ def disparos_draw():
     global enemigo1_posicion
     global nave_destrucion,score_naves, score_vacas
     global vacas, sonido_vaca, rectangulo_explosion_vaca, animacion_explosion_vaca
-    
+    global altura_tarro, nivel_leche 
     if len(disparos)!=0:
         eliminar=False
         eliminar1=False
@@ -330,6 +337,12 @@ def disparos_draw():
                     animacion_explosion_vaca.append(0)
                     vacas.pop(h)
                     sonido_vaca.play()
+                    altura_tarro-=1
+                    nivel_leche+=1
+                    if altura_tarro < 260:
+                        altura_tarro = 260
+                        nivel_leche = 80
+                    
                     eliminar1=True
                     break
             if eliminar1:
@@ -361,11 +374,11 @@ def nave_draw():
     if nave_explosion:
         screen.blit(nave_player_explosion[int(animacion_nave)],rectangulo_player)
         animacion_nave+=0.2
-        print(animacion_nave)
+        
         if animacion_nave>= len(nave_player_explosion):
             animacion_nave = 0
             nave_explosion = False
-            rectangulo_player.midbottom=(80,600)
+            rectangulo_player.midbottom=(400,600)
 
     ##############################################################
     else:  
@@ -447,6 +460,13 @@ def vida_draw():
     lista = (700,725,750)
     for i in range(vida):
         screen.blit(vidas,(lista[i],10))
+altura_tarro = 260
+nivel_leche = 80
+def leche_draw():
+    global linea_leche , tarro, altura_tarro, nivel_leche
+    pg.draw.rect(screen,"White",(13,altura_tarro+9,61,nivel_leche))
+    screen.blit(linea_leche,(11,altura_tarro))
+    screen.blit(tarro,(0,170))
 
 def del_enemigo(i):
     global nave_destrucion,enemigo1_posicion,direcion_enemigo,decenso_enemigo,enemigo_posicion_top
@@ -481,6 +501,7 @@ while True:
         explosion_enemigo_draw()
         explosion_vaca_draw()
         vida_draw()
+        leche_draw()
         colision_nave()
         texto_score=fuente.render(str(score_naves),True,"White")
         screen.blit(texto_score,(30,50))
@@ -516,6 +537,16 @@ while True:
         for j in range(len(vacas)):
             if vacas[j].top > 630:
                 vacas.pop(j)
+                altura_tarro+=5
+                nivel_leche-=5
+                if altura_tarro > 334:
+                    altura_tarro = 260
+                    nivel_leche = 80
+                    vida-=1
+                    nave_explosion= True
+                    animacion_nave = 0
+                    
+
                 break
 
     
