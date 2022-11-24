@@ -33,12 +33,25 @@ fondo=pg.image.load("./imagenes/FONDO/fondo1.png").convert()
 posicion_fondo=(0,0)
 fondo2=pg.image.load("./imagenes/FONDO/fondo2.png").convert_alpha()
 posicion_fondo2=(0,0)
+fondo_menu=pg.image.load("./imagenes/FONDO/MENU FONDO.png").convert()
+modo_facil_select=pg.image.load("./imagenes/DIFICULTAD/FACIL/01 FACIL.png").convert_alpha()
+modo_experto_select=pg.image.load("./imagenes/DIFICULTAD/EXPERTO/01 EXPERTO.png").convert_alpha()
+modo_dificil_select=pg.image.load("./imagenes/DIFICULTAD/DIFICIL/01 DIFICIL.png").convert_alpha()
+modo_facil=pg.image.load("./imagenes/DIFICULTAD/FACIL/02 FACIL.png").convert_alpha()
+modo_experto=pg.image.load("./imagenes/DIFICULTAD/EXPERTO/02 EXPERTO.png").convert_alpha()
+modo_dificil=pg.image.load("./imagenes/DIFICULTAD/DIFICIL/02 DIFICIL.png").convert_alpha()
+numero_menu=0
 #fondo particulas
 fondo_particulas=pg.image.load("./imagenes/particulas.png").convert_alpha()
 posicion_particulas=fondo_particulas.get_rect(midtop=(410,0))
 posicion_particulas2=fondo_particulas.get_rect(midbottom=(410,0))
 
 #variables player
+nave_player_explosion=[]
+nave_player_explosion.append(pg.image.load("./imagenes/EXPL NAVE/01 EXPLO.png").convert_alpha())
+nave_player_explosion.append(pg.image.load("./imagenes/EXPL NAVE/02 EXPLO.png").convert_alpha())
+nave_player_explosion.append(pg.image.load("./imagenes/EXPL NAVE/03 EXPLO.png").convert_alpha())
+
 nave_player= []
 nave_player.append(pg.image.load("./imagenes/NAVE/NAVE_1.png").convert_alpha())
 nave_player.append(pg.image.load("./imagenes/NAVE/NAVE_2.png").convert_alpha())
@@ -56,6 +69,10 @@ LEFT= False
 RIGHT=False
 UP=False
 DOWN=False
+score_naves=0
+score_vacas=0
+fuente=pg.font.Font("./font/OCRAEXT.TTF",30)
+play_game=False
 
 
 
@@ -128,12 +145,43 @@ disparos_vacas=pg.USEREVENT+3
 pg.time.set_timer(disparos_vacas,500)
 
 boton_disparo=False
+def eventos_menu():
+    global numero_menu,play_game,vida
+    global LEFT , RIGHT , UP , DOWN
+    
+    for event in pg.event.get():
+        if event.type==pg.QUIT:
+            exit()
+        if event.type==pg.KEYDOWN:
+            if event.key==pg.K_DOWN:
+                numero_menu+=1
+                if numero_menu>2:
+                    numero_menu=0
+            if event.key==pg.K_UP:
+                numero_menu-=1
+                if numero_menu<0:
+                    numero_menu=2    
+            if event.key==pg.K_F1:
+                play_game=True
+                vida=3
+                enemigo1_posicion.clear()
+                nave_destrucion.clear()
+                direcion_enemigo.clear()
+                decenso_enemigo.clear()
+                enemigo_posicion_top.clear()
+                vacas.clear()
+                vaca_time.clear()
+                LEFT=False
+                RIGHT=False
+                UP=False
+                DOWN=False
+                   
 
 def events():
     global speed_playerx
     global speed_playery
     global imagen_bala
-    global disparos
+    global disparos, numero_menu
     global rectangulo_player 
     global enemigo1_posicion,imagen_enemigo1
     global nave_destrucion
@@ -187,6 +235,20 @@ def events():
             nave_destrucion.append(True)
             enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(0,750),0)))
             vaca_time.append(random.randint(2,3))
+            if numero_menu>0:
+                direcion_enemigo.append(6)
+                decenso_enemigo.append(0)
+                enemigo_posicion_top.append(0)
+                nave_destrucion.append(True)
+                enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(0,750),0)))
+                vaca_time.append(random.randint(2,3))
+            if numero_menu>1:
+                direcion_enemigo.append(6)
+                decenso_enemigo.append(0)
+                enemigo_posicion_top.append(0)
+                nave_destrucion.append(True)
+                enemigo1_posicion.append(imagen_enemigo1.get_rect(midbottom=(random.randint(0,750),0)))
+                vaca_time.append(random.randint(2,3))
 
         if event.type==disparos_tiempo:
             if boton_disparo and not (nave_explosion):
@@ -237,7 +299,7 @@ def disparos_draw():
     global disparos
     global imagen_bala
     global enemigo1_posicion
-    global nave_destrucion
+    global nave_destrucion,score_naves, score_vacas
     global vacas, sonido_vaca, rectangulo_explosion_vaca, animacion_explosion_vaca
     
     if len(disparos)!=0:
@@ -249,6 +311,7 @@ def disparos_draw():
         for i in range(len(disparos)):   
             for j in range(len(enemigo1_posicion)):
                 if enemigo1_posicion[j].colliderect(disparos[i]):
+                    score_naves+=10
                     nave_destrucion[j]=False
                     del_enemigo(j)
                     disparos.pop(i) 
@@ -261,6 +324,7 @@ def disparos_draw():
         for i in range(len(disparos)): 
             for h in range(len(vacas)):
                 if vacas[h].colliderect(disparos[i]):
+                    score_vacas+=5
                     disparos.pop(i)
                     rectangulo_explosion_vaca.append(vacas[h])
                     animacion_explosion_vaca.append(0)
@@ -280,21 +344,29 @@ def disparos_draw():
 def colision_nave():
     global enemigo1_posicion
     global rectangulo_player
-    global vida, nave_explosion
+    global vida, nave_explosion, animacion_nave
     
     for i in enemigo1_posicion:
         if rectangulo_player.colliderect(i):
             if not nave_explosion:
                 vida-=1
                 nave_explosion = True
+                animacion_nave = 0
 
 def nave_draw():
     global nave_player
     global rectangulo_player
     global animacion_nave  
-    global nave_explosion
+    global nave_explosion, nave_player_explosion
     if nave_explosion:
-        pass
+        screen.blit(nave_player_explosion[int(animacion_nave)],rectangulo_player)
+        animacion_nave+=0.2
+        print(animacion_nave)
+        if animacion_nave>= len(nave_player_explosion):
+            animacion_nave = 0
+            nave_explosion = False
+            rectangulo_player.midbottom=(80,600)
+
     ##############################################################
     else:  
         screen.blit(nave_player[int(animacion_nave)],rectangulo_player)
@@ -390,36 +462,60 @@ def del_enemigo(i):
     enemigo_posicion_top.pop(i)
     nave_destrucion.pop(i)
     vaca_time.pop(i)
-   
+
 #bucle principal
 while True:
-    events()
+    
     screen.fill("White")
-    move_player()
-    #zona de dibujo
-    movimiento_fondo()
-    drawling()
-    dibujar_enemigo()
-    movimiento_enemigo1()
-    dibujar_vacas()
-    explosion_enemigo_draw()
-    explosion_vaca_draw()
-    vida_draw()
-    colision_nave()
-   
+    if play_game:
+        events()
+        if vida<=0:
+            play_game=False
+        move_player()
+        #zona de dibujo
+        movimiento_fondo()
+        drawling()
+        dibujar_enemigo()
+        movimiento_enemigo1()
+        dibujar_vacas()
+        explosion_enemigo_draw()
+        explosion_vaca_draw()
+        vida_draw()
+        colision_nave()
+        texto_score=fuente.render(str(score_naves),True,"White")
+        screen.blit(texto_score,(30,50))
+        texto_score2=fuente.render(str(score_vacas),True,"White")
+        screen.blit(texto_score2,(300,50))
+
+    else:
+        
+        screen.blit(fondo_menu,[0,0])
+        screen.blit(modo_facil,(480,320))
+        screen.blit(modo_dificil,(480,380))
+        screen.blit(modo_experto,(480,440))
+        if numero_menu==0:
+
+            screen.blit(modo_facil_select,(480,320))
+        if numero_menu==1:
+            screen.blit(modo_dificil_select,(480,380))
+        if numero_menu==2:
+            screen.blit(modo_experto_select,(480,440))
+        
+        eventos_menu()
+    
     pg.display.update()
     
     clock.tick(60)
 
-    events()
+    
   
     play_music()
     
-    
-
-    for j in range(len(vacas)):
-        if vacas[j].top > 630:
-            vacas.pop(j)
-            break
+    if play_game:
+        events()
+        for j in range(len(vacas)):
+            if vacas[j].top > 630:
+                vacas.pop(j)
+                break
 
     
