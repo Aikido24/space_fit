@@ -34,6 +34,8 @@ posicion_fondo=(0,0)
 fondo2=pg.image.load("./imagenes/FONDO/fondo2.png").convert_alpha()
 posicion_fondo2=(0,0)
 fondo_menu=pg.image.load("./imagenes/FONDO/MENU FONDO.png").convert()
+fondo_creditos1=pg.image.load("./imagenes/FONDO CREDITOS 3.png").convert()
+fondo_creditos2=pg.image.load("./imagenes/CREDITOS 3.png").convert_alpha()
 modo_facil_select=pg.image.load("./imagenes/DIFICULTAD/FACIL/01 FACIL.png").convert_alpha()
 modo_experto_select=pg.image.load("./imagenes/DIFICULTAD/EXPERTO/01 EXPERTO.png").convert_alpha()
 modo_dificil_select=pg.image.load("./imagenes/DIFICULTAD/DIFICIL/01 DIFICIL.png").convert_alpha()
@@ -43,7 +45,9 @@ modo_dificil=pg.image.load("./imagenes/DIFICULTAD/DIFICIL/02 DIFICIL.png").conve
 numero_menu=0
 tarro = pg.image.load("./imagenes/TARRO.png").convert_alpha()
 linea_leche= pg.image.load("./imagenes/LINEA LECHE.png").convert_alpha()
-
+score_naves_img = pg.image.load("./imagenes/marciano_punto.png").convert_alpha()
+score_vacas_img = pg.image.load("./imagenes/vaca_punto.png").convert_alpha()
+posicion_credito= 0
 #fondo particulas
 fondo_particulas=pg.image.load("./imagenes/particulas.png").convert_alpha()
 posicion_particulas=fondo_particulas.get_rect(midtop=(410,0))
@@ -76,6 +80,7 @@ score_naves=0
 score_vacas=0
 fuente=pg.font.Font("./font/OCRAEXT.TTF",30)
 play_game=False
+game_over = False
 
 
 
@@ -151,37 +156,39 @@ boton_disparo=False
 def eventos_menu():
     global numero_menu,play_game,vida
     global LEFT , RIGHT , UP , DOWN
-    global score_naves, score_vacas, nave_explosion
+    global score_naves, score_vacas, nave_explosion, game_over,rectangulo_player
     
     for event in pg.event.get():
         if event.type==pg.QUIT:
             exit()
         if event.type==pg.KEYDOWN:
-            if event.key==pg.K_DOWN:
-                numero_menu+=1
-                if numero_menu>2:
-                    numero_menu=0
-            if event.key==pg.K_UP:
-                numero_menu-=1
-                if numero_menu<0:
-                    numero_menu=2    
-            if event.key==pg.K_F1:
-                play_game=True
-                vida=3
-                enemigo1_posicion.clear()
-                nave_destrucion.clear()
-                direcion_enemigo.clear()
-                decenso_enemigo.clear()
-                enemigo_posicion_top.clear()
-                vacas.clear()
-                vaca_time.clear()
-                LEFT=False
-                RIGHT=False
-                UP=False
-                DOWN=False
-                score_naves=0
-                score_vacas=0
-                nave_explosion= False
+            if not game_over :
+                if event.key==pg.K_DOWN:
+                    numero_menu+=1
+                    if numero_menu>2:
+                        numero_menu=0
+                if event.key==pg.K_UP:
+                    numero_menu-=1
+                    if numero_menu<0:
+                        numero_menu=2    
+                if event.key==pg.K_F1:
+                    rectangulo_player.midbottom=(400,600)
+                    play_game=True
+                    vida=3
+                    enemigo1_posicion.clear()
+                    nave_destrucion.clear()
+                    direcion_enemigo.clear()
+                    decenso_enemigo.clear()
+                    enemigo_posicion_top.clear()
+                    vacas.clear()
+                    vaca_time.clear()
+                    LEFT=False
+                    RIGHT=False
+                    UP=False
+                    DOWN=False
+                    score_naves=0
+                    score_vacas=0
+                    nave_explosion= False
                    
 
 def events():
@@ -491,6 +498,7 @@ while True:
         events()
         if vida<=0:
             play_game=False
+            game_over = True
         move_player()
         #zona de dibujo
         movimiento_fondo()
@@ -504,9 +512,11 @@ while True:
         leche_draw()
         colision_nave()
         texto_score=fuente.render(str(score_naves),True,"White")
-        screen.blit(texto_score,(30,50))
+        screen.blit(texto_score,(40,10))
+        screen.blit(score_naves_img,(10,10))
         texto_score2=fuente.render(str(score_vacas),True,"White")
-        screen.blit(texto_score2,(300,50))
+        screen.blit(score_vacas_img,(250,10))
+        screen.blit(texto_score2,(300,10))
 
     else:
         
@@ -522,7 +532,24 @@ while True:
         if numero_menu==2:
             screen.blit(modo_experto_select,(480,440))
         
+
+        if game_over:
+            posicion_credito-=0.5
+            screen.blit(fondo,[0,0+int(posicion_credito)])
+            screen.blit(fondo2,[0,0+int(posicion_credito)])
+            screen.blit(fondo_creditos1,[0,600+int(posicion_credito)])
+            screen.blit(fondo_creditos2,[0,600+int(posicion_credito)])
+            
+            screen.blit(fondo_creditos1,[0,1725+int(posicion_credito)])
+            #screen.blit(fondo_creditos2,[0,1725+int(posicion_credito)])
+            if posicion_credito<-1725:
+                posicion_credito=-600
+                game_over = False
+        
+        
         eventos_menu()
+
+
     
     pg.display.update()
     
