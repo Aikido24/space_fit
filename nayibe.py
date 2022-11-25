@@ -543,7 +543,7 @@ while True:
             screen.blit(fondo_creditos1,[0,1725+int(posicion_credito)])
             #screen.blit(fondo_creditos2,[0,1725+int(posicion_credito)])
             if posicion_credito<-1725:
-                posicion_credito=-600
+                posicion_credito=0
                 game_over = False
         
         
